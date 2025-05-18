@@ -22,8 +22,12 @@
         $login = $_POST['login'];
         $haslo = $_POST['haslo'];
         $potw = $_POST['potwierdzenie_hasla'];
+        // Sprawdzenie wymagań hasła
+        $wzor = '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/';
         if ($haslo !== $potw) {
             echo "<span style='color:red;'>Hasła nie są zgodne!</span>";
+        } elseif (!preg_match($wzor, $haslo)) {
+            echo "<span style='color:red;'>Hasło musi mieć min. 8 znaków, 1 małą i 1 dużą literę, cyfrę oraz znak specjalny.</span>";
         } else {
             $res = mysqli_query($conn, "SELECT id FROM loginy WHERE usernames = '$login'");
             if (mysqli_num_rows($res) > 0) {
