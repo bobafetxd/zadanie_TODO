@@ -52,6 +52,28 @@ if (!empty($_POST['podzadanie']) && !empty($_POST['zadanie_id'])) {
     exit();
 }
 
+// Edycja zadania
+if (isset($_POST['edytuj_zadanie'], $_POST['zadanie_id'], $_POST['nowy_tekst_zadania'])) {
+    $zadanie_id = $_POST['zadanie_id'];
+    $nowy_tekst = $_POST['nowy_tekst_zadania'];
+    $stmt = mysqli_prepare($conn, "UPDATE zadania SET tekst = ? WHERE id = ? AND user_id = ?");
+    mysqli_stmt_bind_param($stmt, "sii", $nowy_tekst, $zadanie_id, $user_id);
+    mysqli_stmt_execute($stmt);
+    header("Location: strona_glowna.php");
+    exit();
+}
+
+// Edycja podzadania
+if (isset($_POST['edytuj_podzadanie'], $_POST['podzadanie_id'], $_POST['nowy_tekst_podzadania'])) {
+    $podzadanie_id = $_POST['podzadanie_id'];
+    $nowy_tekst = $_POST['nowy_tekst_podzadania'];
+    $stmt = mysqli_prepare($conn, "UPDATE podzadania SET tekst = ? WHERE id = ?");
+    mysqli_stmt_bind_param($stmt, "si", $nowy_tekst, $podzadanie_id);
+    mysqli_stmt_execute($stmt);
+    header("Location: strona_glowna.php");
+    exit();
+}
+
 // Usuwanie zadania
 if (!empty($_POST['usun_zadanie'])) {
     $zadanie_id = $_POST['usun_zadanie'];
@@ -96,6 +118,10 @@ $res = mysqli_query($conn, "SELECT id, zadanie_id, tekst, wykonane FROM podzadan
 while ($row = mysqli_fetch_assoc($res)) {
     $podzadania_map[$row['zadanie_id']][] = $row;
 }
+
+// Sprawdź czy edytujemy zadanie/podzadanie
+$zadanie_do_edycji = isset($_POST['formularz_edytuj_zadanie']) ? $_POST['formularz_edytuj_zadanie'] : null;
+$podzadanie_do_edycji = isset($_POST['formularz_edytuj_podzadanie']) ? $_POST['formularz_edytuj_podzadanie'] : null;
 ?>
 <!-- Login w lewym górnym rogu -->
 <div style="position: fixed; top: 18px; left: 24px; font-size: 18px; color: #6c63ff; font-weight: bold; z-index: 1000;">
@@ -121,7 +147,19 @@ while ($row = mysqli_fetch_assoc($res)) {
                     <?= $zadanie['wykonane'] ? '✅' : '⬜' ?>
                 </button>
             </form>
-            <span style="<?= $style ?>"><?= htmlspecialchars($zadanie['tekst']) ?></span>
+            <?php if ($zadanie_do_edycji == $zadanie['id']): ?>
+                <form method="POST" style="display:inline;">
+                    <input type="hidden" name="zadanie_id" value="<?= $zadanie['id'] ?>">
+                    <input type="text" name="nowy_tekst_zadania" value="<?= htmlspecialchars($zadanie['tekst']) ?>" style="margin-right:8px;">
+                    <button type="submit" name="edytuj_zadanie">Zapisz</button>
+                </form>
+            <?php else: ?>
+                <span style="<?= $style ?>"><?= htmlspecialchars($zadanie['tekst']) ?></span>
+                <form method="POST" style="display:inline;">
+                    <input type="hidden" name="formularz_edytuj_zadanie" value="<?= $zadanie['id'] ?>">
+                    <button type="submit">Edytuj</button>
+                </form>
+            <?php endif; ?>
             <form method="POST" style="display:inline;">
                 <button type="submit" name="usun_zadanie" value="<?= $zadanie['id'] ?>">Usuń</button>
             </form>
@@ -143,7 +181,19 @@ while ($row = mysqli_fetch_assoc($res)) {
                                 <?= $pod['wykonane'] ? '✅' : '⬜' ?>
                             </button>
                         </form>
-                        <span style="<?= $pstyle ?>; margin-right:16px;"><?= htmlspecialchars($pod['tekst']) ?></span>
+                        <?php if ($podzadanie_do_edycji == $pod['id']): ?>
+                            <form method="POST" style="display:inline;">
+                                <input type="hidden" name="podzadanie_id" value="<?= $pod['id'] ?>">
+                                <input type="text" name="nowy_tekst_podzadania" value="<?= htmlspecialchars($pod['tekst']) ?>" style="margin-right:8px;">
+                                <button type="submit" name="edytuj_podzadanie">Zapisz</button>
+                            </form>
+                        <?php else: ?>
+                            <span style="<?= $pstyle ?>; margin-right:16px;"><?= htmlspecialchars($pod['tekst']) ?></span>
+                            <form method="POST" style="display:inline;">
+                                <input type="hidden" name="formularz_edytuj_podzadanie" value="<?= $pod['id'] ?>">
+                                <button type="submit">Edytuj</button>
+                            </form>
+                        <?php endif; ?>
                         <form method="POST" style="display:inline;">
                             <button type="submit" name="usun_podzadanie" value="<?= $pod['id'] ?>">Usuń</button>
                         </form>
